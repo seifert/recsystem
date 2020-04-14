@@ -1,3 +1,7 @@
+
+import os.path
+import tempfile
+
 # recsystem application settings
 
 # Name of the application, this name will be shown in the process list.
@@ -18,10 +22,10 @@
 # SIGUSR2_HANDLER = 'recsystem.app.sigusr2_handler'
 
 # Application configuration class name.
-# CONFIG_CLASS = 'recsystem.config.Config'
+CONFIG_CLASS = 'recsystem.config.Config'
 
 # Application context class name.
-# CONTEXT_CLASS = 'recsystem.context.Context'
+CONTEXT_CLASS = 'recsystem.context.Context'
 
 # Application management commands
 MANAGEMENT_COMMANDS = (
@@ -51,4 +55,10 @@ INTERFACES = {
         # URL path to HTTP handler routing.
         'URLS': 'recsystem.urls.urls_default',
     },
+}
+
+# Database, content of the dict will be passed as a **kwargs
+# into database connect function.
+DATABASE = {
+    'database': os.path.join(tempfile.gettempdir(), 'recsystem.db'),
 }
