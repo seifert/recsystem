@@ -29,7 +29,7 @@ CONTEXT_CLASS = 'recsystem.context.Context'
 
 # Application management commands
 MANAGEMENT_COMMANDS = (
-    # 'recsystem.commands.DummyCommand',
+    'recsystem.commands.FetchRss',
 )
 
 # Application service processes. Each item is a tuple
@@ -61,4 +61,9 @@ INTERFACES = {
 # into database connect function.
 DATABASE = {
     'database': os.path.join(tempfile.gettempdir(), 'recsystem.db'),
+}
+
+RSS_FEED = {
+    'url': 'http://feeds.bbci.co.uk/news/world/rss.xml',
+    'timeout': 5.0,
 }

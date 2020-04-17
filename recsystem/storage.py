@@ -16,6 +16,9 @@ DB_SCHEMA = """
 
 class Storage(object):
 
+    class DuplicateEntry(Exception):
+        pass
+
     def __init__(self, **database_kwargs):
         self.connection = self.get_connection(**database_kwargs)
 
@@ -35,3 +38,12 @@ class Storage(object):
                     connection.execute(obj)
         finally:
             connection.close()
+
+    def insert_entity(self, published, guid, url, title):
+        with self.connection:
+            try:
+                self.connection.execute(
+                    "INSERT INTO entities (published, guid, url, title) "
+                    "VALUES (?, ?, ?, ?)", (published, guid, url, title))
+            except sqlite3.IntegrityError:
+                raise self.DuplicateEntry(guid)

@@ -14,6 +14,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'cached-property',
+        'feedparser',
         'shelter',
     ],
     entry_points={
