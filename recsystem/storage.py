@@ -1,4 +1,9 @@
 
+import collections
+import datetime
+import logging
+import threading
+
 import sqlite3
 
 DB_SCHEMA = """
@@ -13,6 +18,11 @@ DB_SCHEMA = """
     );
 """
 
+Entity = collections.namedtuple(
+    'Entity', ['id', 'published', 'guid', 'url', 'title', 'alpha', 'beta'])
+
+logger = logging.getLogger(__name__)
+
 
 class Storage(object):
 
@@ -21,6 +31,7 @@ class Storage(object):
 
     def __init__(self, **database_kwargs):
         self.connection = self.get_connection(**database_kwargs)
+        self.database_kwargs = database_kwargs
 
     @staticmethod
     def get_connection(**database_kwargs):
@@ -47,3 +58,36 @@ class Storage(object):
                     "VALUES (?, ?, ?, ?)", (published, guid, url, title))
             except sqlite3.IntegrityError:
                 raise self.DuplicateEntry(guid)
+
+    @staticmethod
+    def create_entity(entity_id, published_ts, guid, url, title, alpha, beta):
+        published_dt = datetime.datetime.fromtimestamp(published_ts)
+        return Entity(entity_id, published_dt, guid, url, title, alpha, beta)
+
+    def entities_list(self, limit=10):
+        with self.connection:
+            entities = self.connection.execute(
+                "SELECT id, published, guid, url, title, alpha, beta "
+                "FROM entities ORDER BY published DESC LIMIT ?", (limit,))
+            return [self.create_entity(*ent) for ent in entities]
+
+    @classmethod
+    def _save_alphas_betas_worker(cls, database_kwargs, alphas, betas):
+        connection = cls.get_connection(**database_kwargs)
+        try:
+            with connection:
+                for k, v in alphas.items():
+                    connection.execute(
+                        "UPDATE entities SET alpha=alpha+? WHERE id=?", (v, k))
+                for k, v in betas.items():
+                    connection.execute(
+                        "UPDATE entities SET beta=beta+? WHERE id=?", (v, k))
+        finally:
+            connection.close()
+
+    def save_alphas_betas(self, alphas, betas):
+        logger.info("Save alphas and betas into database")
+        t = threading.Thread(
+            target=self._save_alphas_betas_worker,
+            args=(self.database_kwargs, alphas, betas))
+        t.start()

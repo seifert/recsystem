@@ -15,6 +15,7 @@ setup(
     install_requires=[
         'cached-property',
         'feedparser',
+        'mako',
         'shelter',
     ],
     entry_points={
